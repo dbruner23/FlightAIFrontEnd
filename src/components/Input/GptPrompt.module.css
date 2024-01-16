@@ -1,0 +1,15 @@
+.promptInputContainer {
+    display: flex;
+    position: absolute;
+    bottom: 10%;
+    left: 60px;
+    width: 50%;
+    gap: 1rem;
+}
+
+/* .promptInput {
+    display: flex;
+    position: absolute;
+        
+    background-color: #fff;
+} */
