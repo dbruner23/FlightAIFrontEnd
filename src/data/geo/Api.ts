@@ -32,19 +32,31 @@ const Api = {
     const airportData = await getCurrentFlightData(body);
     store.dispatch(GeoActions.loadAirportData(airportData));
   },
+  setIsLoadingGeoPTResponse: (isLoading: boolean) => {
+    store.dispatch(GeoActions.setIsLoadingGeoPTResponse(isLoading));
+  },
   getAndLoadChatGeoPTResponse: async (body: any) => {
-    const flightData = await chatGeoPTPromptResponse(body);
+    Api.setIsLoadingGeoPTResponse(true);
+    const geoptResponse = await chatGeoPTPromptResponse(body);
+    const flightData = geoptResponse.tool_response;
     const responseType = identifyResponseType(flightData);
 
     if (responseType === "currentFlightsResponse") {
       store.dispatch(GeoActions.loadActiveFlightData(flightData));
     } else if (responseType === "airportsResponse") {
       store.dispatch(GeoActions.loadAirportData(flightData));
-    } else if (responseType === "routesResponse") {
+    } else if (responseType === "routeResponse") {
       store.dispatch(GeoActions.loadRouteData(flightData));
+    } else if (responseType === "multistepRoutesResponse") {
+      store.dispatch(GeoActions.loadMultiRouteData(flightData));
     } else {
       console.log("Unknown Response Type");
     }
+
+    const chatResponse = geoptResponse.chat_response;
+    store.dispatch(GeoActions.loadCurrentChatResponse(chatResponse));
+    console.log("Chat Response: ", chatResponse);
+    Api.setIsLoadingGeoPTResponse(false);
   },
 };
 

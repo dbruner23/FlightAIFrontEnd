@@ -12,26 +12,30 @@ import GeoApi from "../../data/geo/Api";
 import {
   activeFlightDataState,
   airportDataState,
+  multiRouteDataState,
   routeDataState,
 } from "../../data/geo/Reducer";
 import LocalAirportIcon from "@mui/icons-material/LocalAirport";
 import { Flight } from "../../data/geo/Interfaces";
 import mapboxgl from "mapbox-gl";
-import { calculateRadius, parsePathData } from "../../data/utils/GeoptHelpers";
+import {
+  calculateAirportBounds,
+  calculateRadius,
+  parsePathData,
+} from "../../data/utils/GeoptHelpers";
 import * as d3 from "d3";
 
 const DeckFlights = () => {
   const mapRef = useRef<MapRef>(null);
 
   const initialViewState = {
-    latitude: 31.7619,
-    longitude: -106.485,
+    latitude: -40.9006,
+    longitude: 174.886,
     zoom: 5,
     pitch: 0,
   };
 
   const airportScale = d3.scaleLinear().domain([43, 55000000]).range([5, 25]);
-
   const rawActiveFlightData = useSelector(activeFlightDataState);
   const [activeFlightData, setActiveFlightData] = useState<Array<any> | null>(
     null
@@ -40,8 +44,17 @@ const DeckFlights = () => {
   const [airportData, setAirportData] = useState<Array<any> | null>(null);
   const rawRouteData = useSelector(routeDataState);
   const [routeData, setRouteData] = useState<Array<any> | null>(null);
-  console.log(routeData);
+  const rawMultiRouteData = useSelector(multiRouteDataState);
+  const [multiRouteData, setMultiRouteData] = useState<Array<any> | null>(null);
   const [selectedAirport, setSelectedAirport] = useState<any | null>(null);
+  const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
+
+  const clearMap = () => {
+    setActiveFlightData(null);
+    setAirportData(null);
+    setRouteData(null);
+    setMultiRouteData(null);
+  };
 
   useEffect(() => {
     if (!rawActiveFlightData) {
@@ -49,6 +62,7 @@ const DeckFlights = () => {
       // })
       console.log("No active flight data");
     } else {
+      clearMap();
       const mappedData = rawActiveFlightData.map((d: any) => {
         return {
           ...d,
@@ -75,8 +89,75 @@ const DeckFlights = () => {
       console.log("No route data");
       // GeoApi.getRouteData();
     } else {
+      clearMap();
       const airportsOnRoutes: any[] = [];
-      const mappedData = rawRouteData.map((routesGroup: any) => {
+      const mappedData = rawRouteData.map((route: any) => {
+        airportsOnRoutes.push(
+          {
+            orig: route.source_airport,
+            name: route.source_airport_name,
+            templat: parseFloat(route.source_airport_latitude),
+            templong: parseFloat(route.source_airport_longitude),
+            coordinates: [
+              parseFloat(route.source_airport_longitude),
+              parseFloat(route.source_airport_latitude),
+            ],
+            totalseats: route.source_airport_total_seats,
+          },
+          {
+            orig: route.destination_airport,
+            name: route.destination_airport_name,
+            templat: parseFloat(route.destination_airport_latitude),
+            templong: parseFloat(route.destination_airport_longitude),
+            coordinates: [
+              parseFloat(route.destination_airport_longitude),
+              parseFloat(route.destination_airport_latitude),
+            ],
+            totalseats: route.destination_airport_total_seats,
+          }
+        );
+
+        const connection = {
+          source: [
+            parseFloat(route.source_airport_longitude),
+            parseFloat(route.source_airport_latitude),
+          ],
+          target: [
+            parseFloat(route.destination_airport_longitude),
+            parseFloat(route.destination_airport_latitude),
+          ],
+        };
+
+        return {
+          ...route,
+          connection: connection,
+        };
+      });
+
+      setAirportData(airportsOnRoutes);
+      setRouteData(mappedData);
+      // const routeConnections = [
+      //   {
+      //     source: [
+      //       parseFloat(route1.source_airport_longitude),
+      //       parseFloat(route1.source_airport_latitude),
+      //     ],
+      //     target: [
+      //       parseFloat(route1.destination_airport_longitude),
+      //       parseFloat(route1.destination_airport_latitude),
+      //     ],
+      //   },
+      // ];
+      // setRouteData(routeConnection);
+    }
+
+    if (!rawMultiRouteData) {
+      console.log("No route data");
+      // GeoApi.getRouteData();
+    } else {
+      clearMap();
+      const airportsOnRoutes: any[] = [];
+      const mappedData = rawMultiRouteData.map((routesGroup: any) => {
         const mappedRoutesGroup = routesGroup.map((route: any) => {
           const path = parsePathData(route.path);
           const connections = [];
@@ -106,10 +187,32 @@ const DeckFlights = () => {
         });
         return mappedRoutesGroup;
       });
-      setRouteData(mappedData);
+      setMultiRouteData(mappedData);
       setAirportData(airportsOnRoutes);
     }
-  }, [rawActiveFlightData, rawAirportData, rawRouteData]);
+  }, [rawActiveFlightData, rawAirportData, rawMultiRouteData, rawRouteData]);
+
+  useEffect(() => {
+    if (airportData) {
+      const bounds = calculateAirportBounds(airportData);
+      mapRef.current?.fitBounds(
+        new mapboxgl.LngLatBounds(bounds[0], bounds[1]),
+        {
+          padding: 20,
+        }
+      );
+    }
+
+    if (activeFlightData) {
+      const bounds = calculateAirportBounds(activeFlightData);
+      mapRef.current?.fitBounds(
+        new mapboxgl.LngLatBounds(bounds[0], bounds[1]),
+        {
+          padding: 20,
+        }
+      );
+    }
+  }, [airportData, activeFlightData]);
 
   const activeFlightsLayer = useMemo(() => {
     if (!activeFlightData) {
@@ -138,6 +241,9 @@ const DeckFlights = () => {
       },
       getIcon: (d) => "marker",
       getAngle: (d) => 0 - 70 - d.dir, // Rotate the icon based on the d.dir attribute
+      onClick: (event) => {
+        setSelectedFlight(event.object);
+      },
     });
   }, [activeFlightData]);
 
@@ -167,9 +273,25 @@ const DeckFlights = () => {
     });
   }, [airportData]);
 
-  let routeLayers: any = [];
-  if (routeData) {
-    routeLayers = routeData[0].map((route: any, index: number) => {
+  const routeLayer = useMemo(() => {
+    if (!routeData) {
+      return null;
+    }
+
+    return new GreatCircleLayer({
+      id: "route-layer",
+      data: routeData,
+      pickable: true,
+      getWidth: 2,
+      getSourcePosition: (d) => d.connection.source,
+      getTargetPosition: (d) => d.connection.target,
+      getColor: [12, 0, 139],
+    });
+  }, [routeData]);
+
+  let multiRouteLayers: any = [];
+  if (multiRouteData) {
+    multiRouteLayers = multiRouteData[0].map((route: any, index: number) => {
       console.log(route);
       return new GreatCircleLayer({
         id: `route-layer-${index}`,
@@ -183,7 +305,7 @@ const DeckFlights = () => {
     });
   }
 
-  const renderPopup = () => {
+  const renderAirportPopup = () => {
     if (!selectedAirport) {
       return null;
     }
@@ -207,6 +329,32 @@ const DeckFlights = () => {
     );
   };
 
+  const renderFlightPopup = () => {
+    if (!selectedFlight) {
+      return null;
+    }
+
+    return (
+      <Popup
+        latitude={selectedFlight.lat}
+        longitude={selectedFlight.lng}
+        closeButton={true}
+        closeOnClick={false}
+        onClose={() => setSelectedFlight(null)}
+        anchor="bottom"
+        style={{ zIndex: 1000 }}
+      >
+        <h3>
+          {selectedFlight.airline_iata} {selectedFlight.flight_number}
+        </h3>
+        <div>Status: {selectedFlight.status}</div>
+        <div>Altitude: {selectedFlight.alt}</div>
+        <div>Speed: {selectedFlight.speed}</div>
+        <div>Aircraft: {selectedFlight.aircraft_icao}</div>
+      </Popup>
+    );
+  };
+
   return (
     <div
       style={{
@@ -219,15 +367,22 @@ const DeckFlights = () => {
         ref={mapRef}
         mapboxAccessToken="pk.eyJ1IjoiZGJydW5lcjIzIiwiYSI6ImNsYXI3c2IxcTFpMG0zd21xZThhNGtlMGsifQ.DZCj-DgPgGM-2sVemYGSnw"
         initialViewState={initialViewState}
+        // viewState={viewState}
       >
         <NavigationControl position="bottom-right" showZoom visualizePitch />
 
-        {(activeFlightData || airportData || routeData) && (
+        {(activeFlightData || airportData || multiRouteData) && (
           <DeckGlOverlay
-            layers={[activeFlightsLayer, airportLayer, ...routeLayers]}
+            layers={[
+              activeFlightsLayer,
+              airportLayer,
+              routeLayer,
+              ...multiRouteLayers,
+            ]}
           />
         )}
-        {renderPopup()}
+        {renderAirportPopup()}
+        {renderFlightPopup()}
       </Map>
     </div>
   );

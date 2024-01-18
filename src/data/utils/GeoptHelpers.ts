@@ -7,7 +7,7 @@ export const identifyResponseType = (response: any) => {
 
     // Check if the response is an array of arrays (for routesResponse)
     if (Array.isArray(response[0])) {
-      return "routesResponse";
+      return "multistepRoutesResponse";
     }
 
     // Check if the response is an array of objects
@@ -19,6 +19,8 @@ export const identifyResponseType = (response: any) => {
       // Check for a unique property of airportsResponse
       else if ("countryname" in response[0]) {
         return "airportsResponse";
+      } else if ("destination_airport" in response[0]) {
+        return "routeResponse";
       }
     }
   }
@@ -47,3 +49,28 @@ export function parsePathData(data: any) {
 export function calculateRadius(seats: number, R_max: number, R_min: number) {
   return R_min + ((seats - 43) * (R_max - R_min)) / (55000000 - 43);
 }
+
+export const calculateAirportBounds = (
+  airportData: any
+): [number, number][] => {
+  // Initialize variables to store the most extreme coordinates
+  let minLat = Infinity;
+  let minLon = Infinity;
+  let maxLat = -Infinity;
+  let maxLon = -Infinity;
+
+  // Iterate over each item in the dataset to find the extreme values
+  airportData.forEach((airport: any) => {
+    const [lat, lon] = airport.coordinates;
+    minLat = Math.min(minLat, lat);
+    minLon = Math.min(minLon, lon);
+    maxLat = Math.max(maxLat, lat);
+    maxLon = Math.max(maxLon, lon);
+  });
+
+  // Return the southwestern and northeastern coordinates
+  return [
+    [minLat, minLon],
+    [maxLat, maxLon],
+  ];
+};

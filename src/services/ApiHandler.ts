@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://b68b-115-189-96-191.ngrok-free.app",
+  baseURL: "https://45f9-122-56-207-79.ngrok-free.app",
 });
 
 export const getCurrentFlightData = async (body: any) => {
