@@ -24,6 +24,7 @@ import {
   parsePathData,
 } from "../../data/utils/GeoptHelpers";
 import * as d3 from "d3";
+import { clear } from "console";
 
 const DeckFlights = () => {
   const mapRef = useRef<MapRef>(null);
@@ -42,6 +43,7 @@ const DeckFlights = () => {
   );
   const rawAirportData = useSelector(airportDataState);
   const [airportData, setAirportData] = useState<Array<any> | null>(null);
+  console.log(airportData);
   const rawRouteData = useSelector(routeDataState);
   const [routeData, setRouteData] = useState<Array<any> | null>(null);
   const rawMultiRouteData = useSelector(multiRouteDataState);
@@ -57,12 +59,12 @@ const DeckFlights = () => {
   };
 
   useEffect(() => {
+    clearMap();
     if (!rawActiveFlightData) {
       // GeoApi.loadDeckData(() => {
       // })
       console.log("No active flight data");
     } else {
-      clearMap();
       const mappedData = rawActiveFlightData.map((d: any) => {
         return {
           ...d,
@@ -71,7 +73,10 @@ const DeckFlights = () => {
       });
       setActiveFlightData(mappedData);
     }
+  }, [rawActiveFlightData]);
 
+  useEffect(() => {
+    clearMap();
     if (!rawAirportData) {
       console.log("No airport data");
       // GeoApi.getAirportData();
@@ -84,12 +89,14 @@ const DeckFlights = () => {
       });
       setAirportData(mappedData);
     }
+  }, [rawAirportData]);
 
+  useEffect(() => {
+    clearMap();
     if (!rawRouteData) {
       console.log("No route data");
       // GeoApi.getRouteData();
     } else {
-      clearMap();
       const airportsOnRoutes: any[] = [];
       const mappedData = rawRouteData.map((route: any) => {
         airportsOnRoutes.push(
@@ -150,12 +157,14 @@ const DeckFlights = () => {
       // ];
       // setRouteData(routeConnection);
     }
+  }, [rawRouteData]);
 
+  useEffect(() => {
+    clearMap();
     if (!rawMultiRouteData) {
       console.log("No route data");
       // GeoApi.getRouteData();
     } else {
-      clearMap();
       const airportsOnRoutes: any[] = [];
       const mappedData = rawMultiRouteData.map((routesGroup: any) => {
         const mappedRoutesGroup = routesGroup.map((route: any) => {
@@ -190,7 +199,7 @@ const DeckFlights = () => {
       setMultiRouteData(mappedData);
       setAirportData(airportsOnRoutes);
     }
-  }, [rawActiveFlightData, rawAirportData, rawMultiRouteData, rawRouteData]);
+  }, [rawMultiRouteData]);
 
   useEffect(() => {
     if (airportData) {
@@ -202,7 +211,9 @@ const DeckFlights = () => {
         }
       );
     }
+  }, [airportData]);
 
+  useEffect(() => {
     if (activeFlightData) {
       const bounds = calculateAirportBounds(activeFlightData);
       mapRef.current?.fitBounds(
@@ -212,7 +223,7 @@ const DeckFlights = () => {
         }
       );
     }
-  }, [airportData, activeFlightData]);
+  }, [activeFlightData]);
 
   const activeFlightsLayer = useMemo(() => {
     if (!activeFlightData) {
