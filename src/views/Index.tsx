@@ -45,7 +45,7 @@ const Index = () => {
     try {
       const response = await authenticate(password);
       if (response?.status === 200) {
-        localStorage.setItem("userPassword", password);
+        sessionStorage.setItem("userPassword", password);
 
         navigate("/geopt");
       }
