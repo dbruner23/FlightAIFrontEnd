@@ -31,7 +31,7 @@ const DeckFlights = () => {
 
   const initialViewState = {
     latitude: -40.9006,
-    longitude: 174.886,
+    longitude: 172.886,
     zoom: 5,
     pitch: 0,
   };
@@ -43,7 +43,6 @@ const DeckFlights = () => {
   );
   const rawAirportData = useSelector(airportDataState);
   const [airportData, setAirportData] = useState<Array<any> | null>(null);
-  console.log(airportData);
   const rawRouteData = useSelector(routeDataState);
   const [routeData, setRouteData] = useState<Array<any> | null>(null);
   const rawMultiRouteData = useSelector(multiRouteDataState);
@@ -143,19 +142,6 @@ const DeckFlights = () => {
 
       setAirportData(airportsOnRoutes);
       setRouteData(mappedData);
-      // const routeConnections = [
-      //   {
-      //     source: [
-      //       parseFloat(route1.source_airport_longitude),
-      //       parseFloat(route1.source_airport_latitude),
-      //     ],
-      //     target: [
-      //       parseFloat(route1.destination_airport_longitude),
-      //       parseFloat(route1.destination_airport_latitude),
-      //     ],
-      //   },
-      // ];
-      // setRouteData(routeConnection);
     }
   }, [rawRouteData]);
 

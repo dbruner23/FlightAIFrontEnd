@@ -15,24 +15,30 @@ import {
 } from "../../data/geo/Reducer";
 import { useSelector } from "react-redux";
 
+const introText =
+  "Greetings, I'm ChatGeoPT! Feel free to ask me to map current flights, global airports, or flight routes. For example: 'Can you show all currently active flights over Switzerland?' or 'Can you display the 10 largest airports in the US?' or 'Can you show me all flight routes from Auckland to London with 2 stops or less?'";
+
 const GptPrompt = () => {
   const isLoadingGeoPTResponse = useSelector(isLoadingGeoPTResponseState);
   const currentChatGeoPTResponse = useSelector(currentChatResponseState);
   const [userPrompt, setUserPrompt] = useState<string>("");
   const [canSubmit, setCanSubmit] = useState<boolean>(false);
-  const [displayedText, setDisplayedText] = useState("");
+  const [displayedText, setDisplayedText] = useState(introText);
   const boxHeight = displayedText.length > 0 ? "auto" : "0px";
 
   const handleSubmit = () => {
     if (canSubmit) {
       const body = JSON.stringify({ prompt: userPrompt });
-      GeoApi.getAndLoadChatGeoPTResponse(body);
+      try {
+        GeoApi.getAndLoadChatGeoPTResponse(body);
+      } catch (error) {
+        console.error("Error getting GeoPT response", error);
+        window.alert(error);
+      }
     }
     setUserPrompt("");
     setCanSubmit(false);
   };
-
-  const typingSpeed = 50; // milliseconds
 
   useEffect(() => {
     if (isLoadingGeoPTResponse) {
@@ -68,7 +74,7 @@ const GptPrompt = () => {
           className={Styles.promptInput}
           id="outlined-multiline-static"
           label="GeoPT Prompt"
-          placeholder="Ask anything about active flights..."
+          placeholder=""
           multiline
           value={userPrompt}
           sx={{

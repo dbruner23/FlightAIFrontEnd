@@ -38,6 +38,12 @@ const Api = {
   getAndLoadChatGeoPTResponse: async (body: any) => {
     Api.setIsLoadingGeoPTResponse(true);
     const geoptResponse = await chatGeoPTPromptResponse(body);
+
+    if (geoptResponse === null) {
+      Api.setIsLoadingGeoPTResponse(false);
+      return;
+    }
+
     const flightData = geoptResponse.tool_response;
     const responseType = identifyResponseType(flightData);
 
@@ -55,7 +61,6 @@ const Api = {
 
     const chatResponse = geoptResponse.chat_response;
     store.dispatch(GeoActions.loadCurrentChatResponse(chatResponse));
-    console.log("Chat Response: ", chatResponse);
     Api.setIsLoadingGeoPTResponse(false);
   },
 };
