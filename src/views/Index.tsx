@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { authenticate } from "../services/ApiHandler";
-import backgroundImg from "../assets/FlightAIBackground.png";
+import backgroundImg from "../assets/FlightAIBackground-min.png";
 import styled from "@emotion/styled";
 
 const TitleText = styled(Typography)({
