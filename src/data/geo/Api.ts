@@ -1,7 +1,4 @@
 import { GeoActions } from "./Reducer";
-import sportsEquipmentData from "./sportsEquipment.json";
-// import taxiData from './taxidata.json';
-import flightData from "./flightData.json";
 import store from "../../services/Store";
 import {
   chatGeoPTPromptResponse,
@@ -10,20 +7,6 @@ import {
 import { identifyResponseType } from "../utils/GeoptHelpers";
 
 const Api = {
-  loadLibreData: (callback?: () => void) => {
-    store.dispatch(GeoActions.loadLibreData(sportsEquipmentData));
-
-    if (callback) {
-      callback();
-    }
-  },
-  loadActiveFlightData: (callback?: () => void) => {
-    store.dispatch(GeoActions.loadActiveFlightData(flightData));
-
-    if (callback) {
-      callback();
-    }
-  },
   getActiveFlightData: async (body: any) => {
     const flightData = await getCurrentFlightData(body);
     store.dispatch(GeoActions.loadActiveFlightData(flightData));

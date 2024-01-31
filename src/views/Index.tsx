@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -38,6 +38,7 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("Starting cloud server...")
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -56,6 +57,16 @@ const Index = () => {
     setIsLoading(false);
     setPassword("");
   };
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (isLoading) {
+      timeout = setTimeout(() => {
+        setLoadingText("Still starting... Sorry for the wait.");
+      }, 30000);
+    }
+    return () => clearTimeout(timeout);
+  }, [isLoading, setLoadingText]);
 
   return (
     <Box
@@ -87,7 +98,7 @@ const Index = () => {
           <React.Fragment>
             <CircularProgress size={24} sx={{ color: "white " }} />
             <TitleText variant="h5" sx={{ color: "white" }}>
-              Loading...
+              {loadingText}
             </TitleText>
           </React.Fragment>
         ) : (

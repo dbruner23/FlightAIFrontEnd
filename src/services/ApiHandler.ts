@@ -2,12 +2,10 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "https://flightai.onrender.com",
-  // baseURL: "http://localhost:4000",
 });
 
 export const authenticate = async (password: string) => {
   const username = process.env.REACT_APP_USERNAME;
-  const encodedCredentials = btoa(`${username}:${password}`);
 
   try {
     const response = await api.post("/auth", { username, password });
@@ -27,7 +25,6 @@ export const chatGeoPTPromptResponse = async (body: any) => {
   try {
     const username = process.env.REACT_APP_USERNAME;
     const password = sessionStorage.getItem("userPassword");
-    console.log(password);
     const encodedCredentials = btoa(`${username}:${password}`);
 
     const response = await api.post("/geopt/flights", body, {

@@ -92,6 +92,12 @@ const GptPrompt = () => {
             }
             setUserPrompt(e.target.value);
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && canSubmit) {
+              handleSubmit();
+              e.preventDefault(); // Prevents the addition of a new line in the TextField after pressing 'Enter'
+            }
+          }}
         />
         <IconButton
           disabled={!canSubmit}
